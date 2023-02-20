@@ -1,0 +1,17 @@
+#
+# This file is part of the Ingram Micro CloudBlue RnD Integration Connectors SDK.
+#
+# Copyright (c) 2023 Ingram Micro. All Rights Reserved.
+#
+version: '3'
+
+services:
+  mysql:
+    image: 'mysql:latest'
+    environment:
+      MYSQL_DATABASE: 'cache'
+      MYSQL_USER: 'username'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - 3306:3306
