@@ -87,7 +87,7 @@ class MySQLCacheAdapter(Cache):
     def has(self, key: str) -> bool:
         return self.get(key) is not None
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: Any = None, ttl: Optional[int] = None) -> Any:
         try:
             cur = self.connection.cursor()
             cur.execute(self._get_sql, (key,))
@@ -101,6 +101,9 @@ class MySQLCacheAdapter(Cache):
                 cur.execute(self._del_sql, (key,))
                 raise StopIteration
 
+            if ttl is not None:
+                cur.execute(self._replace_sql, (key, row[0], ttl + round(time.time())))
+
             return jsonpickle.decode(row[0])
         except StopIteration:
             ttl = self.ttl
@@ -113,7 +116,7 @@ class MySQLCacheAdapter(Cache):
 
     def put(self, key: str, value: Any, ttl: Optional[int] = None) -> Any:
         serialized = jsonpickle.encode(value)
-        expire_at = (self.ttl if ttl is None else ttl) + time.time()
+        expire_at = (self.ttl if ttl is None else ttl) + round(time.time())
 
         cursor = self.connection.cursor()
 
@@ -131,7 +134,7 @@ class MySQLCacheAdapter(Cache):
     def flush(self, expired_only: bool = False) -> None:
         cursor = self.connection.cursor()
         if expired_only:
-            cursor.execute(self._del_expired_sql, (time.time(),))
+            cursor.execute(self._del_expired_sql, (round(time.time()),))
         else:
             cursor.execute(self._clear_sql, ())
 
